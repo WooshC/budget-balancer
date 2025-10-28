@@ -74,7 +74,8 @@ export default function BudgetSummary({ refresh, monthlyBudget, selectedUser }: 
   const ahorro = Math.max(monthlyBudget - totalGastos, 0);
 
   const renderTable = (list: any[]) => (
-    <table className="w-full border border-gray-300">
+    <div className="overflow-x-auto">
+    <table className="min-w-full border border-gray-300">
       <thead className="bg-gray-100">
         <tr>
           <th className="border px-2 py-1 text-left">Categoría</th>
@@ -114,7 +115,8 @@ export default function BudgetSummary({ refresh, monthlyBudget, selectedUser }: 
           </tr>
         ))}
       </tbody>
-    </table>
+      </table>
+</div>
   );
 
   return (
