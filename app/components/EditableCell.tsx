@@ -50,18 +50,18 @@ export default function EditableCell({
     return (
       <td className={`border px-2 py-1 ${className}`}>
         <input
-          type={type === 'number' ? 'number' : 'text'}
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={handleKeyDown}
-          className={`w-full border border-blue-500 rounded p-1 ${
-            type === 'number' ? 'text-center' : 'text-left'
-          }`}
-          autoFocus
-          step={type === 'number' ? "0.01" : undefined}
-          min={type === 'number' ? "0" : undefined}
-        />
+        type={type === 'number' ? 'number' : 'text'}
+        value={editValue ?? ''} // <- evita NaN
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={handleKeyDown}
+        className={`w-full border border-blue-500 rounded p-1 ${
+          type === 'number' ? 'text-center' : 'text-left'
+        }`}
+        autoFocus
+        step={type === 'number' ? "0.01" : undefined}
+        min={type === 'number' ? "0" : undefined}
+      />
       </td>
     );
   }

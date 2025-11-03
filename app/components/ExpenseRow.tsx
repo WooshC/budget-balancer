@@ -44,6 +44,8 @@ export default function ExpenseRow({
           e.id === expense.id ? updatedExpense : e
         ));
       }
+    } else {
+      console.error('Error updating field:', error);
     }
 
     setIsUpdating(false);
@@ -59,20 +61,24 @@ export default function ExpenseRow({
     const totalAmount = Number(expense.amount) || 0;
     const isPaid = paid >= totalAmount;
 
-    onUpdateExpenses(allExpenses.map(e => 
-      e.id === expense.id ? { 
-        ...e, 
-        paid_amount: paid,
-        is_paid: isPaid
-      } : e
-    ));
-
+    // Solo actualizamos paid_amount, is_paid se calcula automáticamente
     const { error } = await supabase
       .from('expenses')
-      .update({ paid_amount: paid, is_paid: isPaid })
+      .update({ paid_amount: paid }) // Solo actualizamos paid_amount
       .eq('id', expense.id);
 
-    if (error) console.error('Error updating paid amount:', error);
+    if (error) {
+      console.error('Error updating paid amount:', error);
+    } else {
+      // Actualización optimista en el frontend
+      onUpdateExpenses(allExpenses.map(e => 
+        e.id === expense.id ? { 
+          ...e, 
+          paid_amount: paid,
+          is_paid: isPaid // Esto es solo para el frontend
+        } : e
+      ));
+    }
   };
 
   const togglePaymentStatus = async () => {
@@ -85,6 +91,8 @@ export default function ExpenseRow({
     const { error } = await supabase.from('expenses').delete().eq('id', expense.id);
     if (!error) {
       onUpdateExpenses(allExpenses.filter(e => e.id !== expense.id));
+    } else {
+      console.error('Error deleting expense:', error);
     }
   };
 
@@ -97,7 +105,6 @@ export default function ExpenseRow({
 
   const progress = getPaymentProgress();
 
-  // 🔹 En móvil: ahora también permite editar la categoría con EditableCell
   return (
     <tr className={expense.is_paid ? 'bg-green-50' : 'bg-red-50'}>
       {/* Checkbox */}
@@ -131,6 +138,7 @@ export default function ExpenseRow({
         onEdit={onEditCell}
         onSave={updateField}
         type="number"
+        className="text-center"
       />
 
       {/* Precio unitario editable */}
@@ -142,6 +150,7 @@ export default function ExpenseRow({
         onEdit={onEditCell}
         onSave={updateField}
         type="number"
+        className="text-center"
       />
 
       {/* Total */}
@@ -159,11 +168,16 @@ export default function ExpenseRow({
           onChange={(e) => {
             const value = e.target.value;
             if (/^\d*\.?\d*$/.test(value)) {
+              const paid = Number(value) || 0;
+              const totalAmount = Number(expense.amount) || 0;
+              const isPaid = paid >= totalAmount;
+              
+              // Actualización optimista inmediata
               onUpdateExpenses(allExpenses.map(e => 
                 e.id === expense.id ? { 
                   ...e, 
                   paid_amount: value,
-                  is_paid: Number(value) >= Number(expense.amount)
+                  is_paid: isPaid
                 } : e
               ));
             }
