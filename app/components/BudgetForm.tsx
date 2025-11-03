@@ -22,6 +22,7 @@ export default function BudgetForm({ onAddExpense, selectedUser, setSelectedUser
   const [quantity, setQuantity] = useState(1);
   const [unitPrice, setUnitPrice] = useState(0);
   const [type, setType] = useState<'fijo' | 'variable'>('fijo');
+  const [expenseDate, setExpenseDate] = useState<string>(''); // ✅ estado agregado
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -38,7 +39,12 @@ export default function BudgetForm({ onAddExpense, selectedUser, setSelectedUser
       return;
     }
 
-    // Buscar user_id
+    if (!expenseDate) {
+      setError('Debes seleccionar una fecha para el gasto');
+      return;
+    }
+
+    // Buscar o crear usuario
     let { data: userData } = await supabase
       .from('users')
       .select('*')
@@ -48,7 +54,6 @@ export default function BudgetForm({ onAddExpense, selectedUser, setSelectedUser
     let user_id = userData?.id;
 
     if (!user_id) {
-      // Crear usuario si no existe
       const { data, error: userError } = await supabase
         .from('users')
         .insert([{ name: selectedUser }])
@@ -58,13 +63,14 @@ export default function BudgetForm({ onAddExpense, selectedUser, setSelectedUser
       user_id = data.id;
     }
 
-    // Insertar gasto
+    // Insertar gasto con fecha seleccionada
     const { error: expenseError } = await supabase.from('expenses').insert([{
       user_id,
       category,
       quantity,
       unit_price: unitPrice,
-      type
+      type,
+      date: expenseDate
     }]);
 
     if (expenseError) setError(expenseError.message);
@@ -74,7 +80,8 @@ export default function BudgetForm({ onAddExpense, selectedUser, setSelectedUser
       setQuantity(1);
       setUnitPrice(0);
       setType('fijo');
-      onAddExpense?.(); 
+      setExpenseDate('');
+      onAddExpense?.();
     }
   };
 
@@ -90,6 +97,16 @@ export default function BudgetForm({ onAddExpense, selectedUser, setSelectedUser
           value={selectedUser}
           onChange={(e) => setSelectedUser(e.target.value)}
           placeholder="Ingresa nombre de usuario"
+        />
+      </div>
+
+      <div>
+        <label className="block mb-1 text-gray-700">Fecha del gasto</label>
+        <input
+          type="month"
+          className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          value={expenseDate ? expenseDate.slice(0, 7) : ''}
+          onChange={(e) => setExpenseDate(e.target.value + '-01')}
         />
       </div>
 
